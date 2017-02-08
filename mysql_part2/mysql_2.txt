@@ -1,0 +1,211 @@
+
+1. Вставить в таблицу country 10 записей
+
+INSERT INTO country(name, code) 
+VALUES ("Республика Абхазия", "AB"),
+		("Украина","UA"),
+		("Австрийская Республика","AT"),
+		("Республика Азербайджан","AZ"),
+		("Республика Албания","AL"),
+		("Республика Ангола","AO"),
+		("Княжество Андорра","AD"),
+		("Аргентинская Республика","AR"),
+		("Республика Армения","AM"),
+		("Содружество Багамы","BS");
+
+2.Получить все записи всех полей из таблицы country. Получить список названий стран. Получить список названий стран и их президентов.
+SELECT * FROM country;
+SELECT name FROM country;
+SELECT name, president FROM country;
+
+3. Таблица country: получить страны, порядковые номера которых больше 3 и меньше 7. Получить страны, в которых население больше 
+20 миллионов и порядковые номера которых меньше 7. Получить информацию о стране по конкретному названию. Получить страны Азии 
+SELECT id, name FROM country WHERE id BETWEEN 3 AND 7;
+SELECT id, name, population FROM country WHERE id < 7 AND population > 20000000;
+SELECT * FROM country WHERE code = "UA" ;
+SELECT name FROM country WHERE continent = "Азия" ;
+
+4. Таблица country: получить страны, порядковые номера которых либо 5, либо 7, либо 2. Получить страны, названия которых содержат символ n.
+SELECT name FROM country WHERE id IN (2, 5, 7) ;
+SELECT name FROM country WHERE name LIKE '%n%' ;
+
+5.Таблица country: получить выборку всех записей таблицы, назначив псевдонимы в виде сокращенных названий столбцов. Получить список континентов без повторений.
+SELECT name as Country, 
+	code as ID, 
+	area as AreaCountry, 
+	population as PopulationCountry, 
+	continent as ContinentCountry, 
+	president as PresidentCountry 
+FROM country ;
+
+SELECT DISTINCT continent 
+FROM country ;
+
+6.Таблица country: сгруппировать записи по названию континентов.
+SELECT * FROM country GROUP BY continent;
+
+7.Таблица country: получить максимальное и минимальное население по странам. 
+Получить среднее население по Европейским странам. Получить общее население всех стран.
+
+SELECT min(population) as MinPop, max(population) as MaxPop FROM country;
+
+SELECT avg(population) as MaxPop FROM country WHERE continent = "Europe";
+SELECT sum(population)  FROM country;
+
+8.Таблица country: получить континенты, среднее население по странам которых которых превышает 40 000 000 человек.
+SELECT continent FROM country GROUP BY continent HAVING sum(population) > 40000000;
+9. Таблица country: получить полную таблицу упорядоченную по названию страны. 
+Получить полную таблицу упорядоченную по названию континентов и по названию страны.
+SELECT * FROM country ORDER BY name;
+SELECT * FROM country ORDER BY continent, name;
+10. Получить последнюю добавленную запись из таблицы country.
+SELECT * FROM country ORDER BY id DESC LIMIT 1;
+11. Таблица country: изменить количество населения в странах Европы и изменить действующего президента одной из стран.
+UPDATE country 
+SET population = 35000000
+WHERE continent = "Europe";
+
+UPDATE country 
+SET president = NULL
+WHERE code = "UA";
+
+12.Удалить одну из записей из таблицы country
+DELETE FROM country 
+WHERE id = 3;
+13. Таблица country: создать новую колонку continent_id, которя имеет тип TINYINT и значения по умолчанию NULL.
+ALTER TABLE country ADD continent_id TINYINT  DEFAULT NULL;
+14. Таблица country: добавить индекс по полю continent_id
+ALTER TABLE country ADD INDEX(continent_id);
+
+15.Создать новую таблицу continent, в которой будут сохранены названия континентов. Связать таблицу continent с таблицей country по полю 
+continent_id при помощи внешнего ключа. После этого удалить из таблицы поле, которое явно указывает название континента.
+
+CREATE TABLE continent(
+ id INT AUTO_INCREMENT,
+ name VARCHAR(30),
+ PRIMARY KEY (id)
+ );
+ALTER TABLE country
+ADD CONSTRAINT continent_id
+FOREIGN KEY (continent_id)
+REFERENCES continent(id);
+
+ALTER TABLE country DROP COLUMN continent;
+
+16. Создать таблицу с языками language (например English, Ukrainian, ...). 
+Связать таблицу country с таблицей language, моделируя используемые языки в разных странах. 
+Например, в Украине чаще остальных используют украинский и русский язык. Таким образом необходимо получить связь многие ко многим.
+
+CREATE TABLE `language`(
+ id INT AUTO_INCREMENT,
+ name VARCHAR(30),
+ PRIMARY KEY (id)
+ );
+
+CREATE TABLE relation(
+ id INT AUTO_INCREMENT,
+ id_country INT,
+ id_language INT,
+ PRIMARY KEY (id)
+ );
+
+ALTER TABLE relation
+ADD CONSTRAINT id_country
+FOREIGN KEY (id_country)
+REFERENCES country (id);
+
+ALTER TABLE relation
+ADD CONSTRAINT id_language
+FOREIGN KEY (id_language)
+REFERENCES `language` (id);
+17. Соединить таблицы country, continent для получения названий стран и названий континентов
+
+SELECT country.name, continent.name as Continent 
+ FROM country, continent WHERE country.continent_id = continent.id;
+
+18.Выполнить предыдущее задание при помощи JOIN
+
+SELECT country.name, continent.name as Continent 
+ FROM country JOIN  continent ON country.continent_id = continent.id;
+19. Добавить в таблицу languages новые языки. Получить выборку тех языков,
+ которые не используются в имеющихся в базе данных странах. Использовать оператор сравнения IS NULL
+
+INSERT INTO `language` (name) VALUES ('ukr'), ("ru"), ("en");
+20.Добавить в таблицу languages новые языки. Получить выборку тех языков, которые 
+не используются в имеющихся в базе данных странах. Использовать оператор сравнения IS NULL
+SELECT `language`.name FROM `language` JOIN relation ON relation.id_language = `language`.id;
+SELECT `language`.name FROM `language` 
+LEFT JOIN relation 
+ON relation.id_language = `language`.id 
+WHERE relation.id_language IS NULL;
+21.Добавить в таблицу country поле для премьер-министра страны и заполнить записи значениями. 
+Вывести на экран таблицу, в которой будет представлены все президенты и все премьер-министры всех стран в одну колонку.
+ALTER TABLE country ADD ministr VARCHAR(30);
+
+SELECT president FROM country UNION (SELECT ministr FROM country);
+
+22. Используя приведенные примеры, подключится к БД своего проекта Devionity
+
+
+$host = 'localhost';
+$db_user = 'root';
+$db_name = 'practice_db';
+$db_password = '';
+
+$connect = mysqli_connect($host, $db_user, $db_password, $db_name);
+
+23. Создать подключение PDO для базы данных из практических заданий practice_db
+class Connect
+{
+    protected $connection;
+
+    public function __construct($host, $username, $password, $db_name)
+    {
+        $this->connection = new PDO("mysql:dbname = $db_name;host = $host", $username, $password);
+        if (!$this->connection) {
+            throw new Exception('Could not connect to DB ');
+        }
+    }
+}
+
+$host = 'localhost';
+$db_user = 'root';
+$db_name = 'practice_db';
+$db_password = '';
+
+$connect = new Connect ($host, $db_user, $db_password, $db_name);
+24. Получить выборку по всей таблице со странами country. Вывести соответствующий массив на экран 
+
+<?php
+
+class Connect
+{
+    protected $connection;
+
+    public function __construct($host, $username, $password, $db_name)
+    {
+        $this->connection = new PDO("mysql:host = $host;dbname = $db_name", $username, $password);
+		$this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        if (!$this->connection) {
+            throw new Exception('Could not connect to DB ');
+        }
+		var_dump($this->connection);
+    }
+	
+	public function run(){
+		$sth = $this->connection->query('SELECT * FROM practice_db.country');
+		$country = $sth->fetchAll(PDO::FETCH_ASSOC);
+		var_dump($country);
+	}
+}
+
+$host = 'localhost';
+$db_user = 'root';
+$db_name = 'practice_db';
+$db_password = '';
+
+$connect = new Connect ($host, $db_user, $db_password, $db_name);
+$connect->run();
+
+25. Получить вывести из скрипта на экран выборки из предыдущих заданий 
+Файл index.php
