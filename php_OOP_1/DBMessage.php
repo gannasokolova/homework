@@ -22,8 +22,8 @@ class DBMessage extends Message
     {
         $statementInsert = static::$connection->prepare(
             "INSERT INTO Local.messages
-                          (subject, text , created_at, user, id)
-                          VALUES (:subject, :text, NOW(), :user, :id)");
+                  (subject, text , created_at, user, id)
+                  VALUES (:subject, :text, NOW(), :user, :id)");
         try {
             $statementInsert->bindParam(':subject', $this->subject, PDO::PARAM_STR);
             $statementInsert->bindParam(':text', $this->text, PDO::PARAM_STR);
@@ -31,6 +31,8 @@ class DBMessage extends Message
             $statementInsert->bindParam(':id', $this->id, PDO::PARAM_STR);
             if($statementInsert->execute()) {
                 return $this;
+            }else{
+                return false;
             }
         } catch (\Exception $e) {
             throw $e;
@@ -42,7 +44,6 @@ class DBMessage extends Message
         $query = "SELECT * FROM  Local.messages";
         try {
             $messages = static::$connection->query($query)->fetchAll();
-            var_dump($messages);
             return $messages;
         } catch (\Exception $e) {
             throw $e;
@@ -52,11 +53,11 @@ class DBMessage extends Message
     public static function getRecordById($id){
         $query =
             "SELECT * FROM Local.messages
-                         WHERE id =". $id;
+               WHERE id =". $id;
         try {
             $message = static::$connection->query($query)->fetch(PDO::FETCH_ASSOC);
             if($message){
-                echo "<pre>";
+               return $message;
             }else{
                 return false;
             }
@@ -69,7 +70,7 @@ class DBMessage extends Message
     {
         $statementDelete = static::$connection->prepare(
             "DELETE FROM Local.messages
-                         WHERE id = :id");
+                 WHERE id = :id");
         try {
                 $statementDelete->bindParam(':id', $id, PDO::PARAM_STR);
                 if($statementDelete->execute()){
@@ -87,19 +88,21 @@ class DBMessage extends Message
     public function updateRecordById($id){
         $statementUpdate = static::$connection->prepare(
             "UPDATE Local.messages
-                          SET
-                          subject = :subject,
-                          text = :text, 
-                          user =:user
-                          WHERE id = :id");
+                  SET
+                  subject   = :subject,
+                  text      = :text, 
+                  user      = :user,
+                  WHERE id  = :id");
         try {
             $statementUpdate->bindParam(':subject', $this->subject, PDO::PARAM_STR);
             $statementUpdate->bindParam(':text', $this->text, PDO::PARAM_STR);
             $statementUpdate->bindParam(':user', serialize($this->user), PDO::PARAM_STR);
             $statementUpdate->bindParam(':id', $this->id, PDO::PARAM_STR);
-            var_dump($statementUpdate->execute());
+            
             if($statementUpdate->execute()) {
                 return $this;
+            }else{
+                return false;
             }
         } catch (\Exception $e) {
             throw $e;
